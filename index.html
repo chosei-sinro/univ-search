@@ -103,7 +103,10 @@ async function loadCSV() {
             throw new Error("CSVの読込に失敗しました");
         }
 
-        const csvText = await response.text();
+      const csvText = await response.text();
+	const buffer = await response.arrayBuffer();
+	const decoder = new TextDecoder("utf-8");
+	const csvText = decoder.decode(buffer);
 
         parseCSV(csvText);
 

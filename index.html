@@ -2,16 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>大学コード検索</title>
 
 <style>
-
 body{
     font-family:"Yu Gothic","Meiryo",sans-serif;
-    margin:20px auto;
     max-width:1200px;
+    margin:20px auto;
     padding:20px;
 }
 
@@ -28,18 +27,18 @@ h1{
 
 #status{
     margin-top:15px;
+    margin-bottom:15px;
     color:#666;
 }
 
 table{
     width:100%;
     border-collapse:collapse;
-    margin-top:15px;
 }
 
 th{
     background:#003366;
-    color:#fff;
+    color:white;
     text-align:left;
     padding:10px;
 }
@@ -49,47 +48,48 @@ td{
     padding:8px;
 }
 
+tr:hover{
+    background:#f5f5f5;
+}
+
 .code{
-    font-family:monospace;
+    font-family:Consolas,monospace;
     font-weight:bold;
     white-space:nowrap;
 }
 
-.highlight{
-    background:yellow;
-    font-weight:bold;
+.error{
+    color:red;
 }
-
 </style>
+
 </head>
 <body>
 
 <h1>大学コード検索</h1>
 
 <p>
-大学名・学部名・学科名・コード番号を入力してください。<br>
-複数語はスペース区切りでAND検索します。
+大学名・学部名・学科名・略称・コード番号を入力してください。<br>
+複数語をスペースで区切るとAND検索になります。
 </p>
 
 <input
     id="searchBox"
     type="text"
-    placeholder="例：千葉 教育">
+    placeholder="例：北教大 美術">
 
 <div id="status">
-読み込み中...
+データ読込中...
 </div>
 
 <table>
-<thead>
-<tr>
-    <th style="width:180px;">コード</th>
-    <th>大学・学部・学科</th>
-</tr>
-</thead>
-
-<tbody id="results"></tbody>
-
+    <thead>
+        <tr>
+            <th style="width:180px;">コード</th>
+            <th>大学・学部・学科</th>
+        </tr>
+    </thead>
+    <tbody id="results"></tbody>
 </table>
 
 <script>
@@ -98,148 +98,126 @@ const MAX_DISPLAY = 100;
 
 let data = [];
 
+/* CSV読込 */
 
-console.log("ページ起動");
+async function loadCSV() {
 
-fetch("univcode.csv")
-  .then(r => {
-      console.log("status=", r.status);
-      return r.text();
-  })
-  .then(t => {
-      console.log("文字数=", t.length);
-  })
-  .catch(e => {
-      console.error(e);
-  });
+    try {
 
+        const startTime = performance.now();
 
+        const response = await fetch("univcode.csv");
 
-async function loadCSV(){
+        if (!response.ok) {
+            throw new Error("CSV読込失敗");
+        }
 
-    const start = performance.now();
+        let csvText = await response.text();
 
-    try{
+        csvText = csvText.replace(/^\uFEFF/, "");
 
-    console.log("CSV読込開始");
-    const response = await fetch("univcode.csv");
-    console.log("fetch完了");
-    const text = await response.text();
-    console.log("読込文字数=", text.length);
+        const lines = csvText.trim().split(/\r?\n/);
 
-        let text =
-          new TextDecoder("utf-8")
-          .decode(buffer);
-
-        text = text.replace(/^\uFEFF/, "");
-
-        const lines =
-            text.trim().split(/\r?\n/);
+        console.log("総行数", lines.length);
 
         data = [];
 
-        for(let i=1;i<lines.length;i++){
+        for (let i = 1; i < lines.length; i++) {
 
             const line = lines[i];
 
-            const parts = parseLine(line);
+            const parts = parseCsvLine(line);
 
-            if(parts.length < 3) continue;
+            if (parts.length < 3) continue;
 
-            const rec = {
-                code10: parts[0],
-                univtxt: parts[1],
-                univsearch: parts[2]
-            };
+            const code10 = parts[0];
+            const univtxt = parts[1];
+            const univsearch = parts[2];
 
-            rec.searchText =
-                (
-                    rec.code10 + " " +
-                    rec.univtxt + " " +
-                    rec.univsearch
-                ).toLowerCase();
-
-            data.push(rec);
+            data.push({
+                code10,
+                univtxt,
+                univsearch,
+                searchText:
+                    (
+                        code10 + " " +
+                        univtxt + " " +
+                        univsearch
+                    ).toLowerCase()
+            });
         }
 
-        const sec =
-            ((performance.now()-start)/1000)
-            .toFixed(1);
+        const elapsed =
+            ((performance.now() - startTime) / 1000)
+            .toFixed(2);
 
-        document.getElementById("status")
-            .textContent =
-            `${data.length.toLocaleString()}件読込完了 (${sec}秒) 。検索してください。`;
+        document.getElementById("status").textContent =
+            `${data.length.toLocaleString()}件読込完了 (${elapsed}秒)`;
 
     }
-    catch(err){
+    catch(error){
 
-        document.getElementById("status")
-          .textContent =
-          "CSV読込エラー";
+        console.error(error);
 
-        console.error(err);
+        document.getElementById("status").innerHTML =
+            '<span class="error">CSV読込エラー</span>';
     }
 }
 
-function parseLine(line){
+/* 高速CSV解析 */
 
-    const result=[];
-    let current="";
-    let inQuote=false;
+function parseCsvLine(line){
+
+    const result = [];
+
+    let current = "";
+    let inQuotes = false;
 
     for(let i=0;i<line.length;i++){
 
-        const ch=line[i];
+        const c = line[i];
 
-        if(ch === '"'){
-            inQuote=!inQuote;
+        if(c === '"'){
+            inQuotes = !inQuotes;
             continue;
         }
 
-        if(ch === "," && !inQuote){
-            result.push(current.trim());
-            current="";
+        if(c === "," && !inQuotes){
+            result.push(current);
+            current = "";
         }
         else{
-            current+=ch;
+            current += c;
         }
     }
 
-    result.push(current.trim());
+    result.push(current);
 
     return result;
 }
 
-function escapeHtml(str){
-
-    return str
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;");
-}
+/* 検索 */
 
 function search(){
 
-    const q =
+    const query =
         document
-        .getElementById("searchBox")
-        .value
-        .trim()
-        .toLowerCase();
+            .getElementById("searchBox")
+            .value
+            .trim()
+            .toLowerCase();
 
-    if(q.length < 3){
+    if(query.length < 2){
 
-        document.getElementById("results")
-            .innerHTML = "";
+        document.getElementById("results").innerHTML = "";
 
-        document.getElementById("status")
-            .textContent =
+        document.getElementById("status").textContent =
             `${data.length.toLocaleString()}件登録されています。`;
 
         return;
     }
 
-    const keywords = q.split(/\s+/);
+    const keywords = query.split(/\s+/);
 
     let hitCount = 0;
 
@@ -247,19 +225,17 @@ function search(){
 
     for(const row of data){
 
-        let ok = true;
+        let matched = true;
 
-        for(const k of keywords){
+        for(const keyword of keywords){
 
-            if(!row.searchText.includes(k)){
-
-                ok = false;
-
+            if(!row.searchText.includes(keyword)){
+                matched = false;
                 break;
             }
         }
 
-        if(!ok) continue;
+        if(!matched) continue;
 
         hitCount++;
 
@@ -267,27 +243,31 @@ function search(){
 
             html += `
             <tr>
-                <td class="code">
-                    ${escapeHtml(row.code10)}
-                </td>
-                <td>
-                    ${escapeHtml(row.univtxt)}
-                </td>
+                <td class="code">${escapeHtml(row.code10)}</td>
+                <td>${escapeHtml(row.univtxt)}</td>
             </tr>`;
         }
     }
 
-    document.getElementById("results")
-      .innerHTML = html;
+    document.getElementById("results").innerHTML = html;
 
-    document.getElementById("status")
-      .textContent =
-      `${hitCount.toLocaleString()}件ヒット（表示は先頭${MAX_DISPLAY}件まで）`;
+    document.getElementById("status").textContent =
+        `${hitCount.toLocaleString()}件ヒット（先頭${MAX_DISPLAY}件を表示）`;
+}
+
+/* HTMLエスケープ */
+
+function escapeHtml(text){
+
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
 }
 
 document
-  .getElementById("searchBox")
-  .addEventListener("input", search);
+    .getElementById("searchBox")
+    .addEventListener("input", search);
 
 loadCSV();
 
@@ -295,3 +275,4 @@ loadCSV();
 
 </body>
 </html>
+

@@ -1,111 +1,98 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>‘åŠwEŠw•”ŒŸõ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</title>
 
 <style>
-
-body {
+body{
     font-family: "Yu Gothic", sans-serif;
     max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #f8f9fa;
 }
 
-h1 {
+h1{
     color: #003366;
 }
 
-#searchBox {
+#searchBox{
     width: 100%;
     padding: 12px;
-    font-size: 18px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
 }
 
-#count {
+#count{
     margin-top: 15px;
-    color: #555;
-    font-weight: bold;
+    margin-bottom: 10px;
+    color: #666;
 }
 
-table {
+table{
     width: 100%;
-    margin-top: 15px;
     border-collapse: collapse;
-    background: white;
 }
 
-th {
+th{
     background: #003366;
     color: white;
     padding: 10px;
+    text-align: left;
 }
 
-td {
+td{
     border-bottom: 1px solid #ddd;
     padding: 8px;
 }
 
-tr:hover {
-    background: #f0f8ff;
+tr:hover{
+    background-color: #f5f5f5;
 }
 
-.code {
+.code{
     font-family: monospace;
-    white-space: nowrap;
+    font-weight: bold;
 }
 
-.loading {
-    color: blue;
-}
-
-.error {
+.error{
     color: red;
 }
-
 </style>
 </head>
 
 <body>
 
-<h1>‘åŠwEŠw•”ŒŸõ</h1>
+<h1>å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</h1>
 
 <p>
-‘åŠw–¼EŠw•”–¼EŠw‰È–¼E”Ô†‚Ìˆê•”‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B<br>
-•¡”Œê‚ğƒXƒy[ƒX‚Å‹æØ‚é‚ÆANDŒŸõ‚É‚È‚è‚Ü‚·B
+å¤§å­¦åãƒ»å­¦éƒ¨åãƒ»å­¦ç§‘åãƒ»ã‚³ãƒ¼ãƒ‰ç•ªå·ã®ä¸€éƒ¨ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚<br>
+è¤‡æ•°èªã‚’ã‚¹ãƒšãƒ¼ã‚¹åŒºåˆ‡ã‚Šã§å…¥åŠ›ã™ã‚‹ã¨ANDæ¤œç´¢ã§ãã¾ã™ã€‚
 </p>
 
 <input
-    type="text"
     id="searchBox"
-    placeholder="—áFŠâŒ©‘ò ”üp">
+    type="text"
+    placeholder="ä¾‹ï¼šåƒè‘‰ã€€æ•™è‚²">
 
-<div id="count" class="loading">
-ƒf[ƒ^“Ç’†...
-</div>
+<div id="count">èª­ã¿è¾¼ã¿ä¸­...</div>
 
 <table>
     <thead>
         <tr>
-            <th style="width:180px;">”Ô†</th>
-            <th>‘åŠwEŠw•”EŠw‰È</th>
+            <th style="width:180px">ã‚³ãƒ¼ãƒ‰</th>
+            <th>å¤§å­¦ãƒ»å­¦éƒ¨ãƒ»å­¦ç§‘</th>
         </tr>
     </thead>
-    <tbody id="results">
-    </tbody>
+    <tbody id="results"></tbody>
 </table>
 
 <script>
 
-let masterData = [];
+let data = [];
 
-// CSV“Ç
+// CSVèª­è¾¼
 async function loadCSV() {
 
     try {
@@ -113,16 +100,122 @@ async function loadCSV() {
         const response = await fetch("univcode.csv");
 
         if (!response.ok) {
-            throw new Error("CSV“Ç¸”s");
+            throw new Error("CSVã®èª­è¾¼ã«å¤±æ•—ã—ã¾ã—ãŸ");
         }
 
-        const text = await response.text();
+        const csvText = await response.text();
 
-        parseCSV(text);
+        parseCSV(csvText);
 
-        display(masterData);
+        display(data);
 
     } catch(error) {
 
         document.getElementById("count").innerHTML =
-            '<span class="error">
+            '<span class="error">univcode.csv ã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚</span>';
+
+        console.error(error);
+    }
+}
+
+// CSVè§£æ
+function parseCSV(csvText) {
+
+    const lines = csvText.trim().split(/\r?\n/);
+
+    if(lines.length <= 1) return;
+
+    const headers = lines[0].split(",");
+
+    const codeIndex = headers.indexOf("code10");
+    const textIndex = headers.indexOf("univtxt");
+
+    data = [];
+
+    for(let i = 1; i < lines.length; i++) {
+
+        const line = lines[i];
+
+        const commaPos = line.indexOf(",");
+
+        if(commaPos === -1) continue;
+
+        const code10 = line.substring(0, commaPos).trim();
+
+        const univtxt = line
+            .substring(commaPos + 1)
+            .replace(/^"/, "")
+            .replace(/"$/, "");
+
+        data.push({
+            code10: code10,
+            univtxt: univtxt
+        });
+    }
+}
+
+// è¡¨ç¤º
+function display(rows) {
+
+    document.getElementById("count").textContent =
+        rows.length.toLocaleString() + " ä»¶";
+
+    document.getElementById("results").innerHTML =
+        rows.map(row => `
+            <tr>
+                <td class="code">${escapeHtml(row.code10)}</td>
+                <td>${escapeHtml(row.univtxt)}</td>
+            </tr>
+        `).join("");
+}
+
+// æ¤œç´¢
+function search() {
+
+    const query =
+        document.getElementById("searchBox")
+        .value
+        .trim()
+        .toLowerCase();
+
+    if(query === "") {
+        display(data);
+        return;
+    }
+
+    const keywords = query.split(/\s+/);
+
+    const result = data.filter(row => {
+
+        const target =
+            (row.code10 + " " + row.univtxt)
+            .toLowerCase();
+
+        return keywords.every(keyword =>
+            target.includes(keyword)
+        );
+
+    });
+
+    display(result);
+}
+
+// HTMLã‚¨ã‚¹ã‚±ãƒ¼ãƒ—
+function escapeHtml(text) {
+
+    return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+document
+    .getElementById("searchBox")
+    .addEventListener("input", search);
+
+loadCSV();
+
+</script>
+
+</body>
+</html>

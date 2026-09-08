@@ -99,7 +99,6 @@ const MAX_DISPLAY = 100;
 let data = [];
 
 
-
 console.log("ページ起動");
 
 fetch("univcode.csv")
@@ -127,8 +126,6 @@ async function loadCSV(){
     console.log("fetch完了");
     const text = await response.text();
     console.log("読込文字数=", text.length);
-
-        const buffer = await response.arrayBuffer();
 
         let text =
           new TextDecoder("utf-8")
@@ -230,7 +227,7 @@ function search(){
         .trim()
         .toLowerCase();
 
-    if(q.length < 2){
+    if(q.length < 3){
 
         document.getElementById("results")
             .innerHTML = "";

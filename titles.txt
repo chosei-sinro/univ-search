@@ -4,6 +4,9 @@
 [baseurl]
 https://chosei-sinro.github.io/univ-search/
 
+[csvfile]
+univcode.csv
+
 [titles]
 大学コード検索
 

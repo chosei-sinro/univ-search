@@ -1,23 +1,13 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-5YCWLTSCKV"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-5YCWLTSCKV');
-</script>    
-    
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</title>
+<title>‘åŠwƒR[ƒhŒŸõ</title>
 
 <style>
+
 body{
     font-family:"Yu Gothic","Meiryo",sans-serif;
     max-width:1200px;
@@ -72,113 +62,205 @@ tr:hover{
 .error{
     color:red;
 }
+
 </style>
 
 </head>
+
 <body>
 
-<h1>å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</h1>
+<h1 id="pageTitle">‘åŠwƒR[ƒhŒŸõ</h1>
 
-<h3> åƒè‘‰çœŒç«‹é•·ç”Ÿé«˜ç­‰å­¦æ ¡ã€€é€²è·¯æŒ‡å°éƒ¨</h3>
-<p>
-å¤§å­¦åãƒ»å­¦éƒ¨åãƒ»å­¦ç§‘åãƒ»ç•¥ç§°ãƒ»ã‚³ãƒ¼ãƒ‰ç•ªå·ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚è¤‡æ•°èªã‚’ã‚¹ãƒšãƒ¼ã‚¹ã§åŒºåˆ‡ã‚‹ã¨ANDæ¤œç´¢ã«ãªã‚Šã¾ã™ã€‚<br>
-å­¦éƒ¨åãƒ»å­¦ç§‘åã¯ç•¥ç§°ã§å­—æ•°ãŒé™ã‚‰ã‚ŒãŸãƒ‡ãƒ¼ã‚¿ã§ã™ã€‚
-</p>
+<br aria-hidden="true">
+
+<h3 id="pageOwner"></h3>
+
+<div id="pageScripts"></div>
 
 <input
     id="searchBox"
     type="text"
-    placeholder="ä¾‹ï¼šåƒè‘‰ æ•™è‚²">
+    placeholder="—áFç—t ‹³ˆç">
 
 <div id="status">
-ãƒ‡ãƒ¼ã‚¿èª­è¾¼ä¸­...
+ƒf[ƒ^“Ç’†...
 </div>
 
 <table>
-    <thead>
-        <tr>
-            <th style="width:180px;">ã‚³ãƒ¼ãƒ‰</th>
-            <th>å¤§å­¦ãƒ»å­¦éƒ¨ãƒ»å­¦ç§‘</th>
-        </tr>
-    </thead>
-    <tbody id="results"></tbody>
+<thead>
+<tr>
+<th style="width:180px;">ƒR[ƒh”Ô†</th>
+<th>‘åŠwEŠw•”EŠw‰È</th>
+</tr>
+</thead>
+<tbody id="results"></tbody>
 </table>
 
 <script>
 
 const MAX_DISPLAY = 100;
 
+let baseUrl = "";
+
+let pageTag = "";
+let pageTitle = "";
+let pageOwner = "";
+let pageScripts = [];
+
 let data = [];
 
-/* CSVèª­è¾¼ */
+/* -------------------- */
+/* HTMLƒGƒXƒP[ƒv */
+/* -------------------- */
 
-async function loadCSV() {
+function escapeHtml(text){
 
-    try {
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+}
 
-        const startTime = performance.now();
+/* -------------------- */
+/* titles.txt“Ç */
+/* -------------------- */
 
-        const response = await fetch(
-            "https://chosei-sinro.github.io/univ-search/univcode.csv"
-        );
+async function loadTitles(){
 
-        if (!response.ok) {
-            throw new Error("CSVèª­è¾¼å¤±æ•—");
+    try{
+
+        const response =
+            await fetch("titles.txt");
+
+        if(!response.ok){
+            throw new Error("titles.txt“Ç¸”s");
         }
 
-        let csvText = await response.text();
+        const text =
+            await response.text();
 
-        csvText = csvText.replace(/^\uFEFF/, "");
+        const lines = text
+            .replace(/^\uFEFF/, "")
+            .split(/\r?\n/)
+            .map(line => line.trim());
 
-        const lines = csvText.trim().split(/\r?\n/);
+        let mode = "";
 
-        console.log("ç·è¡Œæ•°", lines.length);
+        pageScripts = [];
 
-        data = [];
+        for(const line of lines){
 
-        for (let i = 1; i < lines.length; i++) {
+            if(line === ""){
 
-            const line = lines[i];
+                if(mode === "scripts"){
+                    pageScripts.push("");
+                }
 
-            const parts = parseCsvLine(line);
+                continue;
+            }
 
-            if (parts.length < 3) continue;
+            if(line === "[pagetag]"){
+                mode = "pagetag";
+                continue;
+            }
 
-            const code10 = parts[0];
-            const univtxt = parts[1];
-            const univsearch = parts[2];
+            if(line === "[baseurl]"){
+                mode = "baseurl";
+                continue;
+            }
 
-            data.push({
-                code10,
-                univtxt,
-                univsearch,
-                searchText:
-                    (
-                        code10 + " " +
-                        univtxt + " " +
-                        univsearch
-                    ).toLowerCase()
-            });
+            if(line === "[titles]"){
+                mode = "title";
+                continue;
+            }
+
+            if(line === "[owner]"){
+                mode = "owner";
+                continue;
+            }
+
+            if(line === "[scripts]"){
+                mode = "scripts";
+                continue;
+            }
+
+            if(mode === "pagetag"){
+                pageTag = line;
+                mode = "";
+                continue;
+            }
+
+            if(mode === "baseurl"){
+                baseUrl = line;
+
+                if(
+                    !baseUrl.endsWith("/")
+                ){
+                    baseUrl += "/";
+                }
+
+                mode = "";
+                continue;
+            }
+
+            if(mode === "title"){
+                pageTitle = line;
+                mode = "";
+                continue;
+            }
+
+            if(mode === "owner"){
+                pageOwner = line;
+                mode = "";
+                continue;
+            }
+
+            if(mode === "scripts"){
+                pageScripts.push(line);
+            }
         }
 
-        const elapsed =
-            ((performance.now() - startTime) / 1000)
-            .toFixed(2);
+        if(pageTag){
+            document.title = pageTag;
+        }
 
-        document.getElementById("status").textContent =
-            `${data.length.toLocaleString()}ä»¶èª­è¾¼å®Œäº† (${elapsed}ç§’)`;
+        if(pageTitle){
+            document
+                .getElementById("pageTitle")
+                .textContent = pageTitle;
+        }
 
+        if(pageOwner){
+            document
+                .getElementById("pageOwner")
+                .textContent = pageOwner;
+        }
+
+        document
+            .getElementById("pageScripts")
+            .innerHTML =
+                pageScripts
+                    .map(text =>
+                        text === ""
+                            ? "<p>&nbsp;</p>"
+                            : `<p>${escapeHtml(text)}</p>`
+                    )
+                    .join("");
     }
     catch(error){
 
         console.error(error);
 
-        document.getElementById("status").innerHTML =
-            '<span class="error">CSVèª­è¾¼ã‚¨ãƒ©ãƒ¼</span>';
+        document
+            .getElementById("pageScripts")
+            .innerHTML =
+                "<p>titles.txt ‚Ì“Ç‚É¸”s‚µ‚Ü‚µ‚½B</p>";
     }
 }
 
-/* é«˜é€ŸCSVè§£æ */
+/* -------------------- */
+/* CSV‰ğÍ */
+/* -------------------- */
 
 function parseCsvLine(line){
 
@@ -187,7 +269,7 @@ function parseCsvLine(line){
     let current = "";
     let inQuotes = false;
 
-    for(let i=0;i<line.length;i++){
+    for(let i = 0; i < line.length; i++){
 
         const c = line[i];
 
@@ -197,6 +279,7 @@ function parseCsvLine(line){
         }
 
         if(c === "," && !inQuotes){
+
             result.push(current);
             current = "";
         }
@@ -210,7 +293,84 @@ function parseCsvLine(line){
     return result;
 }
 
-/* æ¤œç´¢ */
+/* -------------------- */
+/* CSV“Ç */
+/* -------------------- */
+
+async function loadCSV(){
+
+    try{
+
+        const response =
+            await fetch(
+                `${baseUrl}univcode.csv`
+            );
+
+        if(!response.ok){
+            throw new Error("CSV“Ç¸”s");
+        }
+
+        let csvText =
+            await response.text();
+
+        csvText =
+            csvText.replace(/^\uFEFF/, "");
+
+        const lines =
+            csvText
+                .trim()
+                .split(/\r?\n/);
+
+        data = [];
+
+        for(let i = 1; i < lines.length; i++){
+
+            const parts =
+                parseCsvLine(lines[i]);
+
+            if(parts.length < 3){
+                continue;
+            }
+
+            const code10 = parts[0];
+            const univtxt = parts[1];
+            const univsearch = parts[2];
+
+            data.push({
+
+                code10,
+                univtxt,
+                univsearch,
+
+                searchText:
+
+                    (
+                        code10 + " " +
+                        univtxt + " " +
+                        univsearch
+                    ).toLowerCase()
+            });
+        }
+
+        document
+            .getElementById("status")
+            .textContent =
+                `${data.length.toLocaleString()}Œ“ÇŠ®—¹`;
+    }
+    catch(error){
+
+        console.error(error);
+
+        document
+            .getElementById("status")
+            .innerHTML =
+                '<span class="error">CSV“ÇƒGƒ‰[</span>';
+    }
+}
+
+/* -------------------- */
+/* ŒŸõ */
+/* -------------------- */
 
 function search(){
 
@@ -221,20 +381,24 @@ function search(){
             .trim()
             .toLowerCase();
 
-    if(query.length < 2){
+    if(query.length === 0){
 
-        document.getElementById("results").innerHTML = "";
+        document
+            .getElementById("results")
+            .innerHTML = "";
 
-        document.getElementById("status").textContent =
-            `${data.length.toLocaleString()}ä»¶ç™»éŒ²ã•ã‚Œã¦ã„ã¾ã™ã€‚`;
+        document
+            .getElementById("status")
+            .textContent =
+                `${data.length.toLocaleString()}Œ“o˜^‚³‚ê‚Ä‚¢‚Ü‚·`;
 
         return;
     }
 
-    const keywords = query.split(/\s+/);
+    const keywords =
+        query.split(/\s+/);
 
     let hitCount = 0;
-
     let html = "";
 
     for(const row of data){
@@ -243,50 +407,76 @@ function search(){
 
         for(const keyword of keywords){
 
-            if(!row.searchText.includes(keyword)){
+            if(
+                !row.searchText.includes(
+                    keyword
+                )
+            ){
                 matched = false;
                 break;
             }
         }
 
-        if(!matched) continue;
+        if(!matched){
+            continue;
+        }
 
         hitCount++;
 
         if(hitCount <= MAX_DISPLAY){
 
             html += `
-            <tr>
-                <td class="code">${escapeHtml(row.code10)}</td>
-                <td>${escapeHtml(row.univtxt)}</td>
-            </tr>`;
+<tr>
+<td class="code">${escapeHtml(row.code10)}</td>
+<td>${escapeHtml(row.univtxt)}</td>
+</tr>`;
         }
     }
 
-    document.getElementById("results").innerHTML = html;
+    document
+        .getElementById("results")
+        .innerHTML = html;
 
-    document.getElementById("status").textContent =
-        `${hitCount.toLocaleString()}ä»¶ãƒ’ãƒƒãƒˆï¼ˆå…ˆé ­${MAX_DISPLAY}ä»¶ã‚’è¡¨ç¤ºï¼‰`;
+    document
+        .getElementById("status")
+        .textContent =
+        `${hitCount.toLocaleString()}Œƒqƒbƒgiæ“ª${MAX_DISPLAY}Œ‚ğ•\¦j`;
 }
 
-/* HTMLã‚¨ã‚¹ã‚±ãƒ¼ãƒ— */
-
-function escapeHtml(text){
-
-    return String(text)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;");
-}
+/* -------------------- */
+/* ƒCƒxƒ“ƒg */
+/* -------------------- */
 
 document
     .getElementById("searchBox")
-    .addEventListener("input", search);
+    .addEventListener(
+        "input",
+        search
+    );
 
-loadCSV();
+/* -------------------- */
+/* ‹N“® */
+/* -------------------- */
+
+(async () => {
+
+    await loadTitles();
+
+    if(!baseUrl){
+
+        document
+            .getElementById("status")
+            .innerHTML =
+            '<span class="error">titles.txt ‚Ì [baseurl] ‚ª–¢İ’è‚Å‚·</span>';
+
+        return;
+    }
+
+    await loadCSV();
+
+})();
 
 </script>
 
 </body>
 </html>
-

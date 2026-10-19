@@ -61,10 +61,10 @@ tr:hover{
 
 .error{
     color:red;
+    font-weight:bold;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -101,6 +101,7 @@ tr:hover{
 const MAX_DISPLAY = 100;
 
 let baseUrl = "";
+let csvFile = "univcode.csv";
 
 let pageTag = "";
 let pageTitle = "";
@@ -122,140 +123,136 @@ function escapeHtml(text){
 }
 
 /* -------------------- */
-/* titles.txt読込 */
+/* titles.txt 読込 */
 /* -------------------- */
 
 async function loadTitles(){
 
-    try{
+    const response = await fetch("titles.txt");
 
-        const response =
-            await fetch("./titles.txt");
+    if(!response.ok){
+        throw new Error("titles.txt読込失敗");
+    }
 
-        if(!response.ok){
-            throw new Error("titles.txt読込失敗");
-        }
+    const text = await response.text();
 
-        const text =
-            await response.text();
+    const lines = text
+        .replace(/^\uFEFF/, "")
+        .split(/\r?\n/)
+        .map(line => line.trim());
 
-        const lines = text
-            .replace(/^\uFEFF/, "")
-            .split(/\r?\n/)
-            .map(line => line.trim());
+    let mode = "";
 
-        let mode = "";
+    pageScripts = [];
 
-        pageScripts = [];
+    for(const line of lines){
 
-        for(const line of lines){
-
-            if(line === ""){
-
-                if(mode === "scripts"){
-                    pageScripts.push("");
-                }
-
-                continue;
-            }
-
-            if(line === "[pagetag]"){
-                mode = "pagetag";
-                continue;
-            }
-
-            if(line === "[baseurl]"){
-                mode = "baseurl";
-                continue;
-            }
-
-            if(line === "[titles]"){
-                mode = "title";
-                continue;
-            }
-
-            if(line === "[owner]"){
-                mode = "owner";
-                continue;
-            }
-
-            if(line === "[scripts]"){
-                mode = "scripts";
-                continue;
-            }
-
-            if(mode === "pagetag"){
-                pageTag = line;
-                mode = "";
-                continue;
-            }
-
-            if(mode === "baseurl"){
-                baseUrl = line;
-
-                if(
-                    !baseUrl.endsWith("/")
-                ){
-                    baseUrl += "/";
-                }
-
-                mode = "";
-                continue;
-            }
-
-            if(mode === "title"){
-                pageTitle = line;
-                mode = "";
-                continue;
-            }
-
-            if(mode === "owner"){
-                pageOwner = line;
-                mode = "";
-                continue;
-            }
+        if(line === ""){
 
             if(mode === "scripts"){
-                pageScripts.push(line);
+                pageScripts.push("");
             }
+
+            continue;
         }
 
-        if(pageTag){
-            document.title = pageTag;
+        if(line === "[pagetag]"){
+            mode = "pagetag";
+            continue;
         }
 
-        if(pageTitle){
-            document
-                .getElementById("pageTitle")
-                .textContent = pageTitle;
+        if(line === "[baseurl]"){
+            mode = "baseurl";
+            continue;
         }
 
-        if(pageOwner){
-            document
-                .getElementById("pageOwner")
-                .textContent = pageOwner;
+        if(line === "[csvfile]"){
+            mode = "csvfile";
+            continue;
         }
 
-        document
-            .getElementById("pageScripts")
-            .innerHTML =
-                pageScripts
-                    .map(text =>
-                        text === ""
-                            ? "<p>&nbsp;</p>"
-                            : `<p>${escapeHtml(text)}</p>`
-                    )
-                    .join("");
+        if(line === "[titles]"){
+            mode = "title";
+            continue;
+        }
+
+        if(line === "[owner]"){
+            mode = "owner";
+            continue;
+        }
+
+        if(line === "[scripts]"){
+            mode = "scripts";
+            continue;
+        }
+
+        if(mode === "pagetag"){
+            pageTag = line;
+            mode = "";
+            continue;
+        }
+
+        if(mode === "baseurl"){
+
+            baseUrl = line;
+
+            if(!baseUrl.endsWith("/")){
+                baseUrl += "/";
+            }
+
+            mode = "";
+            continue;
+        }
+
+        if(mode === "csvfile"){
+            csvFile = line;
+            mode = "";
+            continue;
+        }
+
+        if(mode === "title"){
+            pageTitle = line;
+            mode = "";
+            continue;
+        }
+
+        if(mode === "owner"){
+            pageOwner = line;
+            mode = "";
+            continue;
+        }
+
+        if(mode === "scripts"){
+            pageScripts.push(line);
+        }
     }
-    catch(error){
 
-        console.error(error);
-
-        document
-            .getElementById("pageScripts")
-            .innerHTML =
-                "<p>titles.txt の読込に失敗しました。</p>";
+    if(pageTag){
+        document.title = pageTag;
     }
+
+    if(pageTitle){
+        document
+            .getElementById("pageTitle")
+            .textContent = pageTitle;
+    }
+
+    if(pageOwner){
+        document
+            .getElementById("pageOwner")
+            .textContent = pageOwner;
+    }
+
+    document
+        .getElementById("pageScripts")
+        .innerHTML =
+        pageScripts
+            .map(text =>
+                text === ""
+                ? "<p>&nbsp;</p>"
+                : `<p>${escapeHtml(text)}</p>`
+            )
+            .join("");
 }
 
 /* -------------------- */
@@ -269,7 +266,7 @@ function parseCsvLine(line){
     let current = "";
     let inQuotes = false;
 
-    for(let i = 0; i < line.length; i++){
+    for(let i=0;i<line.length;i++){
 
         const c = line[i];
 
@@ -279,7 +276,6 @@ function parseCsvLine(line){
         }
 
         if(c === "," && !inQuotes){
-
             result.push(current);
             current = "";
         }
@@ -299,73 +295,66 @@ function parseCsvLine(line){
 
 async function loadCSV(){
 
-    try{
+    const csvUrl =
+        `${baseUrl}${csvFile}`;
 
-        const response =
-            await fetch(
-                `${baseUrl}univcode.csv`
-            );
+    console.log("CSV URL =", csvUrl);
 
-        if(!response.ok){
-            throw new Error("CSV読込失敗");
+    const response =
+        await fetch(csvUrl);
+
+    if(!response.ok){
+
+        throw new Error(
+            `HTTP ${response.status} : ${csvUrl}`
+        );
+    }
+
+    let csvText =
+        await response.text();
+
+    csvText = csvText.replace(/^\uFEFF/, "");
+
+    const lines =
+        csvText
+        .trim()
+        .split(/\r?\n/);
+
+    data = [];
+
+    for(let i=1;i<lines.length;i++){
+
+        const parts =
+            parseCsvLine(lines[i]);
+
+        if(parts.length < 3){
+            continue;
         }
 
-        let csvText =
-            await response.text();
+        const code10 = parts[0];
+        const univtxt = parts[1];
+        const univsearch = parts[2];
 
-        csvText =
-            csvText.replace(/^\uFEFF/, "");
+        data.push({
 
-        const lines =
-            csvText
-                .trim()
-                .split(/\r?\n/);
+            code10,
+            univtxt,
+            univsearch,
 
-        data = [];
+            searchText:
+            (
+                code10 + " " +
+                univtxt + " " +
+                univsearch
+            ).toLowerCase()
 
-        for(let i = 1; i < lines.length; i++){
-
-            const parts =
-                parseCsvLine(lines[i]);
-
-            if(parts.length < 3){
-                continue;
-            }
-
-            const code10 = parts[0];
-            const univtxt = parts[1];
-            const univsearch = parts[2];
-
-            data.push({
-
-                code10,
-                univtxt,
-                univsearch,
-
-                searchText:
-
-                    (
-                        code10 + " " +
-                        univtxt + " " +
-                        univsearch
-                    ).toLowerCase()
-            });
-        }
-
-        document
-            .getElementById("status")
-            .textContent =
-                `${data.length.toLocaleString()}件読込完了`;
+        });
     }
-    catch(error){
 
-        console.error(error);
-
-        document
-            .getElementById("status")
-            .innerHTML =
-                '<span class="error">CSV読込エラー</span>';
-    }
+    document
+        .getElementById("status")
+        .textContent =
+        `${data.length.toLocaleString()}件読込完了`;
 }
 
 /* -------------------- */
@@ -376,10 +365,10 @@ function search(){
 
     const query =
         document
-            .getElementById("searchBox")
-            .value
-            .trim()
-            .toLowerCase();
+        .getElementById("searchBox")
+        .value
+        .trim()
+        .toLowerCase();
 
     if(query.length === 0){
 
@@ -390,7 +379,7 @@ function search(){
         document
             .getElementById("status")
             .textContent =
-                `${data.length.toLocaleString()}件登録されています`;
+            `${data.length.toLocaleString()}件登録されています`;
 
         return;
     }
@@ -407,11 +396,7 @@ function search(){
 
         for(const keyword of keywords){
 
-            if(
-                !row.searchText.includes(
-                    keyword
-                )
-            ){
+            if(!row.searchText.includes(keyword)){
                 matched = false;
                 break;
             }
@@ -460,19 +445,29 @@ document
 
 (async () => {
 
-    await loadTitles();
+    try{
 
-    if(!baseUrl){
+        await loadTitles();
+
+        if(!baseUrl){
+
+            throw new Error(
+                "[baseurl] が未設定です"
+            );
+        }
+
+        await loadCSV();
+
+    }
+    catch(error){
+
+        console.error(error);
 
         document
             .getElementById("status")
             .innerHTML =
-            '<span class="error">titles.txt の [baseurl] が未設定です</span>';
-
-        return;
+            `<span class="error">${escapeHtml(error.message)}</span>`;
     }
-
-    await loadCSV();
 
 })();
 

@@ -8,7 +8,7 @@ https://chosei-sinro.github.io/univ-search/
 univcode.csv
 
 [titles]
-大学コード検索
+大学コード検索(試運転中)
 
 [owner]
 千葉県立長生高等学校　進路指導部(2026.10.19)

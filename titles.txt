@@ -1,5 +1,5 @@
 ﻿[pagetag]
-大学コード検索test
+大学コード検索
 
 [baseurl]
 https://chosei-sinro.github.io/univ-search/
@@ -8,7 +8,7 @@ https://chosei-sinro.github.io/univ-search/
 大学コード検索
 
 [owner]
-千葉県立長生高等学校　　進路指導部
+千葉県立長生高等学校　進路指導部(2026.10.19)
 
 [scripts]
 大学名・学部名・学科名・略称・コード番号を入力してください。複数語をスペースで区切るとAND検索になります。

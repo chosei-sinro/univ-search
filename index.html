@@ -130,7 +130,7 @@ async function loadTitles(){
     try{
 
         const response =
-            await fetch("titles.txt");
+            await fetch("./titles.txt");
 
         if(!response.ok){
             throw new Error("titles.txt読込失敗");

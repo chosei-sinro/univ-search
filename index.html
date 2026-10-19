@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>‘åŠwƒR[ƒhŒŸõ</title>
+<title>å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</title>
 
 <style>
 
@@ -69,7 +69,7 @@ tr:hover{
 
 <body>
 
-<h1 id="pageTitle">‘åŠwƒR[ƒhŒŸõ</h1>
+<h1 id="pageTitle">å¤§å­¦ã‚³ãƒ¼ãƒ‰æ¤œç´¢</h1>
 
 <br aria-hidden="true">
 
@@ -80,17 +80,17 @@ tr:hover{
 <input
     id="searchBox"
     type="text"
-    placeholder="—áFç—t ‹³ˆç">
+    placeholder="ä¾‹ï¼šåƒè‘‰ æ•™è‚²">
 
 <div id="status">
-ƒf[ƒ^“Ç’†...
+ãƒ‡ãƒ¼ã‚¿èª­è¾¼ä¸­...
 </div>
 
 <table>
 <thead>
 <tr>
-<th style="width:180px;">ƒR[ƒh”Ô†</th>
-<th>‘åŠwEŠw•”EŠw‰È</th>
+<th style="width:180px;">ã‚³ãƒ¼ãƒ‰ç•ªå·</th>
+<th>å¤§å­¦ãƒ»å­¦éƒ¨ãƒ»å­¦ç§‘</th>
 </tr>
 </thead>
 <tbody id="results"></tbody>
@@ -110,7 +110,7 @@ let pageScripts = [];
 let data = [];
 
 /* -------------------- */
-/* HTMLƒGƒXƒP[ƒv */
+/* HTMLã‚¨ã‚¹ã‚±ãƒ¼ãƒ— */
 /* -------------------- */
 
 function escapeHtml(text){
@@ -122,7 +122,7 @@ function escapeHtml(text){
 }
 
 /* -------------------- */
-/* titles.txt“Ç */
+/* titles.txtèª­è¾¼ */
 /* -------------------- */
 
 async function loadTitles(){
@@ -133,7 +133,7 @@ async function loadTitles(){
             await fetch("titles.txt");
 
         if(!response.ok){
-            throw new Error("titles.txt“Ç¸”s");
+            throw new Error("titles.txtèª­è¾¼å¤±æ•—");
         }
 
         const text =
@@ -254,12 +254,12 @@ async function loadTitles(){
         document
             .getElementById("pageScripts")
             .innerHTML =
-                "<p>titles.txt ‚Ì“Ç‚É¸”s‚µ‚Ü‚µ‚½B</p>";
+                "<p>titles.txt ã®èª­è¾¼ã«å¤±æ•—ã—ã¾ã—ãŸã€‚</p>";
     }
 }
 
 /* -------------------- */
-/* CSV‰ğÍ */
+/* CSVè§£æ */
 /* -------------------- */
 
 function parseCsvLine(line){
@@ -294,7 +294,7 @@ function parseCsvLine(line){
 }
 
 /* -------------------- */
-/* CSV“Ç */
+/* CSVèª­è¾¼ */
 /* -------------------- */
 
 async function loadCSV(){
@@ -307,7 +307,7 @@ async function loadCSV(){
             );
 
         if(!response.ok){
-            throw new Error("CSV“Ç¸”s");
+            throw new Error("CSVèª­è¾¼å¤±æ•—");
         }
 
         let csvText =
@@ -355,7 +355,7 @@ async function loadCSV(){
         document
             .getElementById("status")
             .textContent =
-                `${data.length.toLocaleString()}Œ“ÇŠ®—¹`;
+                `${data.length.toLocaleString()}ä»¶èª­è¾¼å®Œäº†`;
     }
     catch(error){
 
@@ -364,12 +364,12 @@ async function loadCSV(){
         document
             .getElementById("status")
             .innerHTML =
-                '<span class="error">CSV“ÇƒGƒ‰[</span>';
+                '<span class="error">CSVèª­è¾¼ã‚¨ãƒ©ãƒ¼</span>';
     }
 }
 
 /* -------------------- */
-/* ŒŸõ */
+/* æ¤œç´¢ */
 /* -------------------- */
 
 function search(){
@@ -390,7 +390,7 @@ function search(){
         document
             .getElementById("status")
             .textContent =
-                `${data.length.toLocaleString()}Œ“o˜^‚³‚ê‚Ä‚¢‚Ü‚·`;
+                `${data.length.toLocaleString()}ä»¶ç™»éŒ²ã•ã‚Œã¦ã„ã¾ã™`;
 
         return;
     }
@@ -440,11 +440,11 @@ function search(){
     document
         .getElementById("status")
         .textContent =
-        `${hitCount.toLocaleString()}Œƒqƒbƒgiæ“ª${MAX_DISPLAY}Œ‚ğ•\¦j`;
+        `${hitCount.toLocaleString()}ä»¶ãƒ’ãƒƒãƒˆï¼ˆå…ˆé ­${MAX_DISPLAY}ä»¶ã‚’è¡¨ç¤ºï¼‰`;
 }
 
 /* -------------------- */
-/* ƒCƒxƒ“ƒg */
+/* ã‚¤ãƒ™ãƒ³ãƒˆ */
 /* -------------------- */
 
 document
@@ -455,7 +455,7 @@ document
     );
 
 /* -------------------- */
-/* ‹N“® */
+/* èµ·å‹• */
 /* -------------------- */
 
 (async () => {
@@ -467,7 +467,7 @@ document
         document
             .getElementById("status")
             .innerHTML =
-            '<span class="error">titles.txt ‚Ì [baseurl] ‚ª–¢İ’è‚Å‚·</span>';
+            '<span class="error">titles.txt ã® [baseurl] ãŒæœªè¨­å®šã§ã™</span>';
 
         return;
     }

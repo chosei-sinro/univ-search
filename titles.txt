@@ -2,7 +2,7 @@
 大学コード検索test
 
 [baseurl]
-https://chosei-sinro.github.io/univ-search12/
+https://chosei-sinro.github.io/univ-search/
 
 [titles]
 大学コード検索
